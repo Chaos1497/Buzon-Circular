@@ -1,10 +1,10 @@
 #include <bchandler.h>
 
-void initializesFinalizer(char *nombreBuffer);
+void iniciarFinalizador(char *nombreBuffer);
 void finalizarProductor();
 void escribirMsgNuevo(int index);
 
-struct Finalizer {
+struct Finalizador {
 	pid_t PID;
 	int    mensajesProducidos;
 	int    indiceActualBuffer;
@@ -40,7 +40,7 @@ int main(int argc, char *argv[]) {
 		printf("%s\n", "\033[1;31mError: debe insertar el nombre del buffer\033[0m");
 		exit(1);
 	}
-	initializesFinalizer(argv[1]);
+	iniciarFinalizador(argv[1]);
 	sem_wait(finalizador.bcpSemaf);
 	finalizador.bcp->bufferActivo = 0;
 	sem_post(finalizador.bcpSemaf);
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 	return 0;
 }
 
-void initializesFinalizer(char *nombreBuffer) {
+void iniciarFinalizador(char *nombreBuffer) {
 	// Mapping messages shared buffer address
 	finalizador.buffer = (struct Mensaje *) mapearBloqueDeMemoria(nombreBuffer);
 	// Opening producer buffer access semaphore and storing its file descriptor
