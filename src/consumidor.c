@@ -89,17 +89,17 @@ int main(int argc, char *argv[]){
 		leerMsg(consumidor.indiceActualBuffer);
 	}
 
-	// Printing in terminal a finalized producer alarm and some statistics
-	printf("\033[1;33m---------------------------------------------------\n");
-	printf("|El consumidor con id %-5i fue finalizado|\n", consumidor.PID);
-	printf("|-------------------------------------------------|\n");
-	printf("|\033[0;33mMensajes consumidos %-10d                     \033[1;33m|\n", consumidor.mensajesConsumidos);
-	printf("|\033[0;33mTiempo esperado(s)   %-10f                     \033[1;33m|\n", consumidor.tiempoEsperado);
-	printf("|\033[0;33mTiempo bloqueado (s)  %-10f                     \033[1;33m|\n", consumidor.tiempoBloqueado);
-	printf("|\033[0;33mTiempo de usuario (us)    %-10li                     \033[1;33m|\n", consumidor.user_stime);
+	// Printing in terminal a finalized consumecer alarm and some statistics
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
+	printf("\033[1;35m|   El consumidor con id %-5i fue finalizado   \033[1;35m|\n", consumidor.PID);
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");;
+	printf("\033[0;34m|Mensajes consumidos %-10d                     \033[1;34m|\n", consumidor.mensajesConsumidos);
+	printf("\033[0;34m|Tiempo esperado(s)   %-10f                     \033[1;34m|\n", consumidor.tiempoEsperado);
+	printf("\033[0;34m|Tiempo bloqueado (s)  %-10f                     \033[1;34m|\n", consumidor.tiempoBloqueado);
+	printf("\033[0;34m|Tiempo de usuario (us)    %-10li                 \033[1;34m|\n", consumidor.user_stime);
 	printf("---------------------------------------------------\033[0m\n");
 	// Printing suspention reason
-	printf("\033[1;31mRazón de suspensión: %s\033[0m\n", consumidor.motivoSuspension);
+	printf("\033[1;31m|Razón de suspensión: %s\033[1;31m|\n", consumidor.motivoSuspension);
 	return 0;
 }
 
@@ -174,12 +174,12 @@ void leerMsg(int index){
 	consumidor.mensajesConsumidos++;
 	sem_post(consumidor.bufferSemafProductor);
 
-	printf("\033[1;32m----------------------------------------------\n");
-	printf("| Un mensaje fue leído en la memoria copartida  |\n");
-	printf("|--------------------------------------------|\n");
-	printf("|\033[0;32mIndice del buffer     %-10i                 \033[1;32m|\n", consumidor.indiceActualBuffer);
-	printf("|\033[0;32mConsumidores activos  %-10i                 \033[1;32m|\n", consumidor.bcc->totalConsumidores);
-	printf("|\033[0;32mProductores activos  %-10i                 \033[1;32m|\n", consumidor.bcp->totalProductores);
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
+	printf("\033[1;35m| Un mensaje fue leído en la memoria compartida \033[1;35m|\n");
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
+	printf("\033[0;34m|Indice del buffer     %-10i                 \033[1;34m|\n", consumidor.indiceActualBuffer);
+	printf("\033[0;34m|Consumidores activos  %-10i                 \033[1;34m|\n", consumidor.bcc->totalConsumidores);
+	printf("\033[0;34m|Productores activos  %-10i                 \033[1;34m|\n", consumidor.bcp->totalProductores);
 	printf("|--------------------------------------------|\n");
 	imprimirMsg(msg);
 	printf("----------------------------------------------\033[0m\n");
@@ -187,14 +187,14 @@ void leerMsg(int index){
 }
 
 void imprimirMsg(struct Mensaje *msg){
-	printf("|\033[0;32mPID Productor    %-10i                 \033[1;32m|\n", msg->id);
-	printf("|\033[0;32mDía              %-10i                 \033[1;32m|\n", msg->fecha.dia);
-	printf("|\033[0;32mMes              %-10i                 \033[1;32m|\n", msg->fecha.mes);
-	printf("|\033[0;32mAño              %-10i                 \033[1;32m|\n", msg->fecha.anio);
-	printf("|\033[0;32mHora             %-10i                 \033[1;32m|\n", msg->tiempo.hora);
-	printf("|\033[0;32mMinutos          %-10i                 \033[1;32m|\n", msg->tiempo.minutos);
-	printf("|\033[0;32mSegundos         %-10i                 \033[1;32m|\n", msg->tiempo.segundos);
-	printf("|\033[0;32mNúmero Mágico    %-10i                 \033[1;32m|\n", msg->numeroMagico);
+	printf("\033[0;35m|PID Productor    %-10i                 \033[1;35m|\n", msg->id);
+	printf("\033[0;33m|Día              %-10i                 \033[1;33m|\n", msg->fecha.dia);
+	printf("\033[0;33m|Mes              %-10i                 \033[1;33m|\n", msg->fecha.mes);
+	printf("\033[0;33m|Año              %-10i                 \033[1;33m|\n", msg->fecha.anio);
+	printf("\033[0;33m|Hora             %-10i                 \033[1;33m|\n", msg->tiempo.hora);
+	printf("\033[0;33m|Minutos          %-10i                 \033[1;33m|\n", msg->tiempo.minutos);
+	printf("\033[0;33m|Segundos         %-10i                 \033[1;33m|\n", msg->tiempo.segundos);
+	printf("\033[0;33m|Número Mágico    %-10i                 \033[1;33m|\n", msg->numeroMagico);
 }
 
 void finalizarConsumidor(){

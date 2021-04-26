@@ -70,12 +70,12 @@ int main(int argc, char *argv[]){
 		// Incrementing
 		sem_post(productor.bufferSemafConsumidor);
 		// Printing in terminal a written message alarm and some statistics
-		printf("\033[1;32m----------------------------------------------\n");
-		printf("|Un mensaje fue escrito en la memoria copartida|\n");
-		printf("|----------------------------------------------|\n");
-		printf("|\033[0;32mIndice del buffer    %-10i                 \033[1;32m|\n", productor.indiceActualBuffer);
-		printf("|\033[0;32mConsumidores activos  %-10i                 \033[1;32m|\n", productor.bcc->totalConsumidores);
-		printf("|\033[0;32mProductores activos  %-10i                 \033[1;32m|\n", productor.bcp->totalProductores);
+		printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
+		printf("\033[1;35m|Un mensaje fue escrito en la memoria copartida\033[1;35m|\n");
+		printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
+		printf("\033[0;34m|Indice del buffer    %-10i                 \033[1;34m|\n", productor.indiceActualBuffer);
+		printf("\033[0;34m|Consumidores activos  %-10i                 \033[1;34m|\n", productor.bcc->totalConsumidores);
+		printf("\033[0;34m|Productores activos  %-10i                 \033[1;34m|\n", productor.bcp->totalProductores);
 		printf("----------------------------------------------\033[0m\n");
 
 		if(not(productor.bcp->bufferActivo)) {
@@ -85,13 +85,13 @@ int main(int argc, char *argv[]){
 	}
 
 	// Printing in terminal a finalized productor alarm and some statistics
-	printf("\033[1;33m---------------------------------------------------\n");
-	printf("|El productor con id %-5i fue finalizado|\n", productor.PID);
-	printf("|-------------------------------------------------|\n");
-	printf("|\033[0;33mMensajes producidos %-10d                     \033[1;33m|\n", productor.mensajesProducidos);
-	printf("|\033[0;33mTiempo esperado (s)   %-10f                     \033[1;33m|\n", productor.tiempoEsperado);
-	printf("|\033[0;33mTiempo bloqueado (s)  %-10f                     \033[1;33m|\n", productor.tiempoBloqueado);
-	printf("|\033[0;33mTiempo en kernel (us)  %-10li                     \033[1;33m|\n", productor.kernel_time);
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
+	printf("\033[1;35m|El productor con id %-5i fue finalizado  \033[1;35m|\n", productor.PID);
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
+	printf("\033[0;34m|Mensajes producidos %-10d                     \033[1;34m|\n", productor.mensajesProducidos);
+	printf("\033[0;34m|Tiempo esperado (s)   %-10f                    \033[1;34m|\n", productor.tiempoEsperado);
+	printf("\033[0;34m|Tiempo bloqueado (s)  %-10f                     \033[1;34m|\n", productor.tiempoBloqueado);
+	printf("\033[0;34m|Tiempo en kernel (us)  %-10li                    \033[1;34m|\n", productor.kernel_time);
 	printf("---------------------------------------------------\033[0m\n");
 	return 0;
 }

@@ -66,28 +66,28 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Printing in terminal a written message alarm and some statistics
-	printf("\033[1;32m-------------------------------------\n");
-	printf("|Estadisticas finales               |\n");
-	printf("|-----------------------------------|\n");
-	printf("|\033[0;32mMensajes totales       %-10i  \033[1;32m|\n", finalizador.bcp->mensajesProducidos);
-	printf("|\033[0;32mConsumidores totales   %-10i  \033[1;32m|\n", finalizador.bcc->consumidoresAcumulados);
-	printf("|\033[0;32mProductores totales    %-10i  \033[1;32m|\n", finalizador.bcp->productoresAcumulados);
-	printf("|\033[0;33mConsumidores eliminados por llave  %-10d  \033[1;33m|\n", finalizador.bcc->llaveEliminada);
-	printf("|\033[0;33mTotal de tiempo esperando      %-10f  \033[1;33m|\n", finalizador.bcc->totalTiempoEsperado + finalizador.bcp->totalTiempoEsperado);
-	printf("|\033[0;33mTotal de tiempo bloqueado     %-10f  \033[1;33m|\n", finalizador.bcc->totalTiempoBloqueado + finalizador.bcp->totalTiempoBloqueado);
-	printf("|\033[0;33mTiempo de usuario total (us)   %-10i  \033[1;33m|\n", finalizador.bcc->totalTiempoUsuario);
-	printf("|\033[0;33mTiempo de kernel total (us) %-10i  \033[1;33m|\n", finalizador.bcp->totalTiempoKernel);
+	printf("\033[1;33m|-------------------------------------\033[1;33m|\n");
+	printf("\033[1;35m|Estadisticas finales                 \033[1;35m|\n");
+	printf("\033[1;33m|-------------------------------------\033[1;33m|\n");
+	printf("\033[0;32m|Mensajes totales       %-10i  \033[1;32m|\n", finalizador.bcp->mensajesProducidos);
+	printf("\033[0;32m|Consumidores totales   %-10i  \033[1;32m|\n", finalizador.bcc->consumidoresAcumulados);
+	printf("\033[0;32m|Productores totales    %-10i  \033[1;32m|\n", finalizador.bcp->productoresAcumulados);
+	printf("\033[0;34m|Consumidores eliminados por llave  %-10d  \033[1;34m|\n", finalizador.bcc->llaveEliminada);
+	printf("\033[0;34m|Total de tiempo esperando      %-10f  \033[1;34m|\n", finalizador.bcc->totalTiempoEsperado + finalizador.bcp->totalTiempoEsperado);
+	printf("\033[0;34m|Total de tiempo bloqueado     %-10f  \033[1;34m|\n", finalizador.bcc->totalTiempoBloqueado + finalizador.bcp->totalTiempoBloqueado);
+	printf("\033[0;34m|Tiempo de usuario total (us)   %-10i  \033[1;34m|\n", finalizador.bcc->totalTiempoUsuario);
+	printf("\033[0;34m|Tiempo de kernel total (us) %-10i  \033[1;34m|\n", finalizador.bcp->totalTiempoKernel);
 	printf("-------------------------------------\033[0m\n");
-	// Setting semaphores free by nombre 
+	// Libera los semáforos por nombre
 	sem_unlink(productores_semaf_nombre);
 	sem_unlink(consumidores_semaf_nombre);
 	sem_unlink(bccNombreSemaforo);
 	sem_unlink(bcpNombreSemaforo);
-	// Setting shared memory blocks free by nombre
+	// Libera los bloques de memoria compartida por nombre
 	eliminarBloqueMemoria(bcpNombre);
 	eliminarBloqueMemoria(bccNombre);
 	eliminarBloqueMemoria(argv[1]);
-	// Setting free used string allocated memory 
+	// Libera los nombres de memoria y semáforos 
 	free(productores_semaf_nombre);
 	free(consumidores_semaf_nombre);
 	free(bccNombreSemaforo);
