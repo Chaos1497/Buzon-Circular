@@ -1,3 +1,9 @@
+/*  
+*   Memoria Compartida POSIX. (Shared Memory). Linux
+*   El código es una modificación obtenida de: https://github.com/WhileTrueThenDream/ExamplesCLinuxUserSpace
+*   Creador: WhileTrueThenDream, 2020.
+*/
+
 #include "bchandler.h"
 #define ERROR -1
 

@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
 	printf("\033[1;33m|-------------------------------------\033[1;33m|\n");
 	printf("\033[1;35m|Estadisticas finales                 \033[1;35m|\n");
 	printf("\033[1;33m|-------------------------------------\033[1;33m|\n");
-	printf("\033[0;32m|Mensajes totales       %-10i  \033[1;32m|\n", finalizador.bcp->mensajesProducidos);
+	printf("\033[0;32m|Mensajes en buffer     %-10i  \033[1;32m|\n", finalizador.bcp->mensajesProducidos);
 	printf("\033[0;32m|Consumidores totales   %-10i  \033[1;32m|\n", finalizador.bcc->consumidoresAcumulados);
 	printf("\033[0;32m|Productores totales    %-10i  \033[1;32m|\n", finalizador.bcp->productoresAcumulados);
 	printf("\033[0;34m|Consumidores eliminados por llave  %-10d  \033[1;34m|\n", finalizador.bcc->llaveEliminada);
