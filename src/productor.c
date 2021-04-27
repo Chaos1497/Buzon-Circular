@@ -193,7 +193,18 @@ void escribirMsgNuevo(int index) {
 	msgNuevo.tiempo.minutos = time_info->tm_min;
 	msgNuevo.tiempo.segundos = time_info->tm_sec;
 	msgNuevo.numeroMagico = rand() % (NUMERO_MAGICO + 1);
+	printf("|--------------------------------------------|\n");
+	printf("\033[0;35m|PID Productor    %-10i                 \033[1;35m|\n", msgNuevo.id);
+	printf("\033[0;33m|Día              %-10i                 \033[1;33m|\n", msgNuevo.fecha.dia);
+	printf("\033[0;33m|Mes              %-10i                 \033[1;33m|\n", msgNuevo.fecha.mes);
+	printf("\033[0;33m|Año              %-10i                 \033[1;33m|\n", msgNuevo.fecha.anio);
+	printf("\033[0;33m|Hora             %-10i                 \033[1;33m|\n", msgNuevo.tiempo.hora);
+	printf("\033[0;33m|Minutos          %-10i                 \033[1;33m|\n", msgNuevo.tiempo.minutos);
+	printf("\033[0;33m|Segundos         %-10i                 \033[1;33m|\n", msgNuevo.tiempo.segundos);
+	printf("\033[0;33m|Número Mágico    %-10i                 \033[1;33m|\n", msgNuevo.numeroMagico);
+	printf("|--------------------------------------------|\033[0m\n");
 	escribirEnBloque(productor.buffer, &msgNuevo, sizeof(struct Mensaje), index);
+
 }
 
 //Distribución exponencial
