@@ -20,7 +20,7 @@ struct Finalizador {
 	sem_t  *bccSemaf; 
 } finalizador;
 
-// Declaring semaphore names
+// Declaración de semaforos
 char *productores_semaf_nombre;
 char *consumidores_semaf_nombre;
 char *bcpNombreSemaforo;
@@ -35,7 +35,7 @@ double r;
 int consumidoresTotales;
 
 int main(int argc, char *argv[]) {
-	// Ckecking if executable file gets just 2 arguments
+	// Verificación de argumentos
 	if(argc != 2) {
 		printf("%s\n", "\033[1;31mError: debe insertar el nombre del buffer\033[0m");
 		exit(1);
@@ -48,24 +48,24 @@ int main(int argc, char *argv[]) {
 		sem_post(finalizador.bufferSemafProductor);
 	}
 	while(finalizador.bcc->totalConsumidores > 0){
-		// Decrement global producer bufer semaphore
+		// Disminuye semaforo global de finalizador
 		sem_wait(finalizador.bcpSemaf);
-		// Storing producer writting buffer index valor for keeping untouchable for other process
+		// Almacenamiento del valor del índice del búfer de escritura del finalizador para mantenerlo intocable para otros procesos
 		finalizador.indiceActualBuffer = finalizador.bcp->indiceBuffer;
-		// This lines increments index to be written in messages buffer.
+		// Incrementa el indice de los mensajes escritos en el buffer
 		finalizador.bcp->indiceBuffer++;
 		finalizador.bcp->indiceBuffer = finalizador.bcp->indiceBuffer % (tamanioBloqueBuzon / sizeof(struct Mensaje));
-		// Incrementing global producer bufer semaphorefinalizer
+		// Incrementa el semaforo del finalizador del buffer
 		sem_post(finalizador.bcpSemaf);
-		// Decrementing producer messages buffer semaphore for blocking one index from that buffer
+		// Disminuye el semáforo del búfer de mensajes del finalizador para bloquear un índice de ese búfer
 		sem_wait(finalizador.bufferSemafProductor);
-		// Writing a new message into the shared buffer
+		// Escribe un mensaje nuevo en el buffer compartido
 		escribirMsgNuevo(finalizador.indiceActualBuffer);
-		// Incrementing
+		// Incrementa el semaforo del finalizador del buffer
 		sem_post(finalizador.bufferSemafConsumidor);
 	}
 
-	// Printing in terminal a written message alarm and some statistics
+	// Imprime estadísticas finales
 	printf("\033[1;33m|-------------------------------------\033[1;33m|\n");
 	printf("\033[1;35m|Estadisticas finales                 \033[1;35m|\n");
 	printf("\033[1;33m|-------------------------------------\033[1;33m|\n");
@@ -98,36 +98,36 @@ int main(int argc, char *argv[]) {
 }
 
 void iniciarFinalizador(char *nombreBuffer) {
-	// Mapping messages shared buffer address
+	// Mapea los mensajes en la memoria compartida
 	finalizador.buffer = (struct Mensaje *) mapearBloqueDeMemoria(nombreBuffer);
-	// Opening producer buffer access semaphore and storing its file descriptor
+	// Abre el semáforo de acceso al búfer del productor y almacenar su descriptor de archivo
 	productores_semaf_nombre = generarEtiqueta(nombreBuffer, PRODUCTOR_SEMAF_ETIQ);
 	finalizador.bufferSemafProductor = abrirSemaforo(productores_semaf_nombre);
-	// Opening consumer buffer access semaphore and storing its file descriptor
+	// Abre el semáforo de acceso al búfer del consumidor y almacenar su descriptor de archivo
 	consumidores_semaf_nombre = generarEtiqueta(nombreBuffer, CONSUMIDOR_SEMAF_ETIQ);
 	finalizador.bufferSemafConsumidor = abrirSemaforo(consumidores_semaf_nombre);
-	// Opening shared consumer global variables buffer semaphore and storing its file descriptor
+	// Mapeo del búfer de variables globales del consumidor compartido y almacenamiento de su dirección de memoria
 	bccNombreSemaforo = generarEtiqueta(nombreBuffer, CONSUMIDOR_BC_SEMAF_ETIQ);
 	finalizador.bccSemaf = abrirSemaforo(bccNombreSemaforo);
-	// Opening shared producer global variables buffer semaphore and storing its file descriptor
+	// Mapeo del búfer de variables globales del productor compartido y almacenamiento de su dirección de memoria
 	bcpNombreSemaforo = generarEtiqueta(nombreBuffer, PRODUCTOR_BC_SEMAF_ETIQ);
 	finalizador.bcpSemaf = abrirSemaforo(bcpNombreSemaforo);
-	// Mapping shared producer global variables buffer and storing its memory address
+	// Mapeo del búfer de variables globales del productor compartido y almacenamiento de su dirección de memoria
 	bcpNombre = generarEtiqueta(nombreBuffer, PRODUCTOR_BC_ETIQ);
 	finalizador.bcp = (struct buzCir_productores *) mapearBloqueDeMemoria(bcpNombre);
-	// Mapping shared consumer global variables buffer and storing its memory address
+	// Mapeo del búfer de variables globales del consumidor compartido y almacenamiento de su dirección de memoria
 	bccNombre = generarEtiqueta(nombreBuffer, CONSUMIDOR_BC_ETIQ);
 	finalizador.bcc = (struct buzCir_consumidores *) mapearBloqueDeMemoria(bccNombre);
-	// Decrementing global producer bufer semaphore
-	// Storing shared messages buffer size for writing index computing
+	// Almacenamiento del tamaño del búfer de mensajes compartidos para escribir el cálculo de índices
 	tamanioBloqueBuzon = obtenerTamanoBloque(nombreBuffer);
-	// Setting some timing and counting statatistic values to 0
+	// Estadísticas y tiempos inicializados
 	finalizador.mensajesProducidos = 0;
 	finalizador.tiempoEsperado = 0;
 	finalizador.sem_blocked_time = 0;
 	finalizador.kernel_time = 0;
 }
 
+// Escribe el mensaje de finalización a los productores y consumidores
 void escribirMsgNuevo(int index) {
 	time_t raw_time;
  	time(&raw_time);

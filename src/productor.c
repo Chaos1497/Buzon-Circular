@@ -1,6 +1,8 @@
 #include <bchandler.h>
 
-void iniciarProductor(char *nombreBuffer, double random_times_mean);
+#define ENTER_ASCII_CODE 10
+
+void iniciarProductor(char *nombreBuffer, int random_times_mean, int modoOper);
 void finalizarProductor();
 void escribirMsgNuevo(int index);
 double exponential(double x);
@@ -9,6 +11,7 @@ struct Productor{
 	pid_t  PID;
 	int    mensajesProducidos;
 	int    indiceActualBuffer;
+	int    modoOper;
 	double mediaTiempo;
 	double tiempoEsperado;
 	double tiempoBloqueado;
@@ -23,6 +26,7 @@ struct Productor{
 
 struct rusage ktime;
 int kill = FALSE;
+int key_mode = FALSE;
 int tamanioBloqueBuzon;
 double r;
 
@@ -31,45 +35,55 @@ clock_t blocked_time_begin, blocked_time_end;
 
 
 int main(int argc, char *argv[]){
-	if(argc != 3) {
-		printf("%s\n", "\033[1;31mError: debe insertar 2 argumentos, nombre del buffer y media de tiempos aleatorios\033[0m");
+	// Verificación de argumentos
+	if(argc != 4){
+		printf("\033[1;31m");
+		printf("%s\n", "Error: debe insertar 3 argumentos: nombre del buffer, media de tiempos aleatorios y modo de operación");
+		printf("\033[0m");
 		exit(1);
 	}
 	
-	iniciarProductor(argv[1], atoi(argv[2]));
-	while(not(kill)){
-		// Saving starting waited tiempo 
-		waited_time_begin = clock();
-		// Stopping process with random exponential behavior values
-		sleep(exponential(productor.mediaTiempo));
-		// Saving ending waited tiempo 
-		waited_time_end = clock();
-		// Storing defference between end and start tiempo into waited tiempo
-		productor.tiempoEsperado += (double)(waited_time_end - waited_time_begin) / CLOCKS_PER_SEC;
-		// Saving starting blocked tiempo 
+	iniciarProductor(argv[1], atoi(argv[2]), atoi(argv[3]));
+	while(not(kill)) {
+		// Verifica el modo de operación
+		if(key_mode){
+			// Esperando la tecla ENTER
+			printf("\033[0;36mPresione \033[1;33mEnter\033[0;36m para producir mensajes...\033[0m\n"); 
+			waited_time_begin = clock();
+			while(getchar() != ENTER_ASCII_CODE);
+			waited_time_end = clock();
+			// Calculando tiempo esperado
+			productor.tiempoEsperado += (double)(waited_time_end - waited_time_begin) / CLOCKS_PER_SEC;
+		}else{ 
+			waited_time_begin = clock();
+			// Deteniendo el proceso con valores de distribución exponencial
+			sleep(exponential(productor.mediaTiempo)); 
+			waited_time_end = clock();
+			// Calculando tiempo esperado
+			productor.tiempoEsperado += (double)(waited_time_end - waited_time_begin) / CLOCKS_PER_SEC;
+		}
 		blocked_time_begin = clock();
-		// Decrement global productor bufer semaphore
+		// Disminuye semaforo global de productores
 		sem_wait(productor.bcpSemaf);
-		// Storing productor writting buffer index valor for keeping untouchable for other process
+		// Almacenamiento del valor del índice del búfer de escritura del productor para mantenerlo intocable para otros procesos
 		productor.indiceActualBuffer = productor.bcp->indiceBuffer;
-		// This lines increments index to be written in messages buffer.
+		// Incrementa el indice del buffer para escribir mensajes
 		productor.bcp->indiceBuffer++;
 		productor.bcp->indiceBuffer = productor.bcp->indiceBuffer % (tamanioBloqueBuzon / sizeof(struct Mensaje));
-		// Incrementing global productor bufer semaphore
+		// Incrementa semaforo global de productores
 		sem_post(productor.bcpSemaf);
-		// Decrementing productor messages buffer semaphore for blocking one index from that buffer
+		// Disminuye el semáforo del búfer de mensajes del consumidor para bloquear un índice de ese búfer
 		sem_wait(productor.bufferSemafProductor);
-		// Saving ending waited tiempo 
 		blocked_time_end = clock();
-		// Storing defference between end and start tiempo into waited tiempo
+		// Calculando tiempo bloqueado
 		productor.tiempoBloqueado += (double)(blocked_time_end - blocked_time_begin) / CLOCKS_PER_SEC;
-		// Writing a new message into the shared buffer
+		// Escribe un mensaje nuevo en el buffer
 		escribirMsgNuevo(productor.indiceActualBuffer);
-		// Incrementing produced messages number just for statistics
+		// Incrementa los mensajes producidos en las estadisticas
 		productor.mensajesProducidos++;
-		// Incrementing
+		// Incrementa el semaforo del consumidor del buffer
 		sem_post(productor.bufferSemafConsumidor);
-		// Printing in terminal a written message alarm and some statistics
+		// Imprime estadísticas
 		printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
 		printf("\033[1;35m|Un mensaje fue escrito en la memoria copartida\033[1;35m|\n");
 		printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
@@ -79,12 +93,12 @@ int main(int argc, char *argv[]){
 		printf("----------------------------------------------\033[0m\n");
 
 		if(not(productor.bcp->bufferActivo)) {
-			// Calling finalize productor function
+			// Llama al finalizador de productores
 			finalizarProductor();
 		}
 	}
 
-	// Printing in terminal a finalized productor alarm and some statistics
+	// Imprime las estadísticas finales de un productor finalizado
 	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
 	printf("\033[1;35m|El productor con id %-5i fue finalizado  \033[1;35m|\n", productor.PID);
 	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
@@ -92,53 +106,65 @@ int main(int argc, char *argv[]){
 	printf("\033[0;34m|Tiempo esperado (s)   %-10f                    \033[1;34m|\n", productor.tiempoEsperado);
 	printf("\033[0;34m|Tiempo bloqueado (s)  %-10f                     \033[1;34m|\n", productor.tiempoBloqueado);
 	printf("\033[0;34m|Tiempo en kernel (us)  %-10li                    \033[1;34m|\n", productor.kernel_time);
-	printf("---------------------------------------------------\033[0m\n");
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
 	return 0;
 }
 
-void iniciarProductor(char *nombreBuffer, double random_times_mean) {
-	// Setting productor id with the process id given by the kernel
+void iniciarProductor(char *nombreBuffer, int random_times_mean, int operation_mode){
+	// Verificación de argumentos
+	if (operation_mode != 0 && operation_mode != 1){
+		printf("\033[1;31m");
+		printf("%s\n", "Error: el modo de operación debe ser 0 (automatico) o 1 (manual)");
+		printf("\033[0m");
+		exit(1);
+	}
+	// Verificación del modo de operación
+	if(operation_mode == 1){
+		key_mode = TRUE;
+	}
+
 	productor.PID = getpid();
-	// Getting generating tiempo mean given by the executable argument and storing it 
 	productor.mediaTiempo = random_times_mean;
-	// Mapping messages shared buffer address
+	productor.modoOper = operation_mode;
+	// Mapea los mensajes en la memoria compartida
 	productor.buffer = (struct Mensaje *) mapearBloqueDeMemoria(nombreBuffer);
-	// Opening productor buffer access semaphore and storing its file descriptor
+	// Abre el semáforo de acceso al búfer del productor y almacenar su descriptor de archivo
 	char *productores_semaf_nombre = generarEtiqueta(nombreBuffer, PRODUCTOR_SEMAF_ETIQ);
 	productor.bufferSemafProductor = abrirSemaforo(productores_semaf_nombre);
-	// Opening consumer buffer access semaphore and storing its file descriptor
+	// Abre el semáforo de acceso al búfer del consumidor y almacenar su descriptor de archivo
 	char *consumidores_semaf_nombre = generarEtiqueta(nombreBuffer, CONSUMIDOR_SEMAF_ETIQ);
 	productor.bufferSemafConsumidor = abrirSemaforo(consumidores_semaf_nombre);
-	// Mapping shared productor global variables buffer and storing its memory address
+	// Mapeo del búfer de variables globales del productor compartido y almacenamiento de su dirección de memoria
 	char *bcpNombre = generarEtiqueta(nombreBuffer, PRODUCTOR_BC_ETIQ);
 	productor.bcp = (struct buzCir_productores *) mapearBloqueDeMemoria(bcpNombre);
-	// Mapping shared consumer global variables buffer and storing its memory address
+	// Mapeo del búfer de variables globales del consumidor compartido y almacenamiento de su dirección de memoria
 	char *bccNombre = generarEtiqueta(nombreBuffer, CONSUMIDOR_BC_ETIQ);
 	productor.bcc = (struct buzCir_consumidores *) mapearBloqueDeMemoria(bccNombre);
-	// Opening shared productor global variables buffer semaphore and storing its file descriptor
+	// Mapeo del búfer de variables globales del semáforo compartido y almacenamiento de su dirección de memoria
 	char *bcpNombreSemaforo = generarEtiqueta(nombreBuffer, PRODUCTOR_BC_SEMAF_ETIQ);
 	productor.bcpSemaf = abrirSemaforo(bcpNombreSemaforo);
-	// Decrementing global productor bufer semaphore
+	// Disminución del semáforo del búfer global del consumidor
 	sem_wait(productor.bcpSemaf);
-	// Incrementing total producers valor
+	// Incrementa el contador de productores
 	productor.bcp->totalProductores++;
 	productor.bcp->productoresAcumulados++;
-	// Incrementing global productor bufer semaphore
+	// Incrementa el contador del semáforo
 	sem_post(productor.bcpSemaf);
-	// Storing shared messages buffer size for writing index computing
+	// Almacenamiento del tamaño del búfer de mensajes compartidos para escribir el cálculo de índices
 	tamanioBloqueBuzon = obtenerTamanoBloque(nombreBuffer);
-	// Setting some timing and counting statatistic values to 0
+	// Estadísticas y tiempos inicializados
 	productor.mensajesProducidos = 0;
 	productor.tiempoEsperado = 0;
 	productor.tiempoBloqueado = 0;
 	productor.kernel_time = 0;
-	// Setting free used string allocated memory 
+	// Liberación de nombers de semáforos, productores y consumidores
 	free(productores_semaf_nombre);
 	free(bcpNombre);
 	free(bccNombre);
 	free(bcpNombreSemaforo);
 }
 
+// Finaliza un productor
 void finalizarProductor() {
 	getrusage(RUSAGE_SELF, &ktime);
 	productor.kernel_time = (long int) ktime.ru_stime.tv_usec;
@@ -152,6 +178,7 @@ void finalizarProductor() {
 	kill = TRUE;
 }
 
+// Escribe un mensaje nuevo en el bloque de memoria compartida
 void escribirMsgNuevo(int index) {
 	time_t raw_time;
  	time(&raw_time);
@@ -169,6 +196,7 @@ void escribirMsgNuevo(int index) {
 	escribirEnBloque(productor.buffer, &msgNuevo, sizeof(struct Mensaje), index);
 }
 
+//Distribución exponencial
 double exponential(double x) {
 	r = rand() / (RAND_MAX + 1.0);
 	return -log(1 - r) / x;

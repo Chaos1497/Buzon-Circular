@@ -37,80 +37,76 @@ double poisson(double lambda);
 
 
 int main(int argc, char *argv[]){
+	// Verificación de argumentos
 	if(argc != 4){
 		printf("\033[1;31m");
-		printf("%s\n", "Error: debe insertar 3 argumentos: nombre del buffer, media de tiempos aleatorios and operation mode");
+		printf("%s\n", "Error: debe insertar 3 argumentos: nombre del buffer, media de tiempos aleatorios y modo de operación");
 		printf("\033[0m");
 		exit(1);
 	}
 
 	iniciarConsumidor(argv[1], atoi(argv[2]), atoi(argv[3]));
-	// This main loop ends when kill variable is TRUE
 	while(not(kill)) {
-		// Checking the set mode
+		// Verifica el modo de operación
 		if(key_mode){
-			// Waiting for entering key code
+			// Esperando la tecla ENTER
 			printf("\033[0;36mPresione \033[1;33mEnter\033[0;36m para consumir mensajes...\033[0m\n");
-			// Saving starting waited tiempo 
 			waited_time_begin = clock();
 			while(getchar() != ENTER_ASCII_CODE);
-			// Saving ending waited tiempo 
 			waited_time_end = clock();
-			// Storing defference between end and start tiempo into waited tiempo
+			// Calculando tiempo esperado
 			consumidor.tiempoEsperado += (double)(waited_time_end - waited_time_begin) / CLOCKS_PER_SEC;
 		}else{
-			// Saving starting waited tiempo 
 			waited_time_begin = clock();
-			// Stopping process with random poisson behavior values
+			// Deteniendo el proceso con valores de distribución de poisson
 			sleep(poisson(consumidor.mediaTiempo));
-			// Saving ending waited tiempo 
 			waited_time_end = clock();
-			// Storing defference between end and start tiempo into waited tiempo
+			// Calculando tiempo esperado
 			consumidor.tiempoEsperado += (double)(waited_time_end - waited_time_begin) / CLOCKS_PER_SEC;
 		}
-		// Saving starting blocked tiempo 
 		blocked_time_begin = clock();
-		// Decrement global consumidor bufer semaphore
+		// Disminuye semaforo global de consumidores
 		sem_wait(consumidor.bccSemaf);
-		// Storing consumidor writting buffer index valor for keeping untouchable for other process
+		// Almacenamiento del valor del índice del búfer de escritura del consumidor para mantenerlo intocable para otros procesos
 		consumidor.indiceActualBuffer = consumidor.bcc->indiceBuffer;
-		// This lines increments index to be written in messages buffer.
+		// Incrementa el indice del buffer para consumir mensajes
 		consumidor.bcc->indiceBuffer++;
 		consumidor.bcc->indiceBuffer = consumidor.bcc->indiceBuffer % (tamanioBloqueBuzon / sizeof(struct Mensaje));
-		// Incrementing global consumidor bufer semaphore
+		// Incrementa semaforo global de consumidores
 		sem_post(consumidor.bccSemaf);
-		// Decrementing consumidor messages buffer semaphore for blocking one index from that buffer
+		// Disminuye el semáforo del búfer de mensajes del consumidor para bloquear un índice de ese búfer
 		sem_wait(consumidor.bufferSemafConsumidor);
-		// Saving ending waited tiempo 
 		blocked_time_end = clock();
-		// Storing defference between end and start tiempo into waited tiempo
+		// Calculando tiempo bloqueado
 		consumidor.tiempoBloqueado += (double)(blocked_time_end - blocked_time_begin) / CLOCKS_PER_SEC;
-		// Reading a new message in the shared buffer
+		// Lee un mensaje nuevo en el buffer
 		leerMsg(consumidor.indiceActualBuffer);
+		
 	}
 
-	// Printing in terminal a finalized consumecer alarm and some statistics
+	// Imprime las estadísticas finales de un consumidor finalizado
 	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
 	printf("\033[1;35m|   El consumidor con id %-5i fue finalizado   \033[1;35m|\n", consumidor.PID);
-	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");;
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
 	printf("\033[0;34m|Mensajes consumidos %-10d                     \033[1;34m|\n", consumidor.mensajesConsumidos);
 	printf("\033[0;34m|Tiempo esperado(s)   %-10f                     \033[1;34m|\n", consumidor.tiempoEsperado);
 	printf("\033[0;34m|Tiempo bloqueado (s)  %-10f                     \033[1;34m|\n", consumidor.tiempoBloqueado);
 	printf("\033[0;34m|Tiempo de usuario (us)    %-10li                 \033[1;34m|\n", consumidor.user_stime);
-	printf("---------------------------------------------------\033[0m\n");
-	// Printing suspention reason
+	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
+	// Imprime la razón de suspensión
 	printf("\033[1;31m|Razón de suspensión: %s\033[1;31m|\n", consumidor.motivoSuspension);
 	return 0;
 }
 
 void iniciarConsumidor(char *nombreBuffer, int random_times_mean, int operation_mode){
+	// Verificación de argumentos
 	if (operation_mode != 0 && operation_mode != 1){
 		printf("\033[1;31m");
 		printf("%s\n", "Error: el modo de operación debe ser 0 (automatico) o 1 (manual)");
 		printf("\033[0m");
 		exit(1);
 	}
-	// Checking and setting the operation mode
+	// Verificación del modo de operación
 	if(operation_mode == 1){
 		key_mode = TRUE;
 	}
@@ -118,39 +114,39 @@ void iniciarConsumidor(char *nombreBuffer, int random_times_mean, int operation_
 	consumidor.PID = getpid();
 	consumidor.mediaTiempo = random_times_mean;
 	consumidor.modoOper = operation_mode;
-	// Mapping the shared messages buffer block memory
+	// Mapea los mensajes en la memoria compartida
 	consumidor.buffer = (struct Mensaje *) mapearBloqueDeMemoria(nombreBuffer);
-	// Opening consumidor buffer access semaphore and storing its file descriptor
+	// Abre el semáforo de acceso al búfer del productor y almacenar su descriptor de archivo
 	char *productores_semaf_nombre = generarEtiqueta(nombreBuffer, PRODUCTOR_SEMAF_ETIQ);
 	consumidor.bufferSemafProductor = abrirSemaforo(productores_semaf_nombre);
-	// Opening consumidor buffer access semaphore and storing its file descriptor
+	// Abre el semáforo de acceso al búfer del consumidor y almacenar su descriptor de archivo
 	char *consumidores_semaf_nombre = generarEtiqueta(nombreBuffer, CONSUMIDOR_SEMAF_ETIQ);
 	consumidor.bufferSemafConsumidor = abrirSemaforo(consumidores_semaf_nombre);
-	// Mapping shared consumidor global variables buffer and storing its memory address
+	// Mapeo del búfer de variables globales del consumidor compartido y almacenamiento de su dirección de memoria
 	char *bccNombre = generarEtiqueta(nombreBuffer, CONSUMIDOR_BC_ETIQ);
 	consumidor.bcc = (struct buzCir_consumidores *) mapearBloqueDeMemoria(bccNombre);
-	// Mapping shared producer global variables buffer and storing its memory address
+	// Mapeo del búfer de variables globales del productor compartido y almacenamiento de su dirección de memoria
 	char *bcpNombre = generarEtiqueta(nombreBuffer, PRODUCTOR_BC_ETIQ);
 	consumidor.bcp = (struct buzCir_productores *) mapearBloqueDeMemoria(bcpNombre);
-	// Opening shared productor global variables buffer semaphore and storing its file descriptor
+	// Mapeo del búfer de variables globales del semáforo compartido y almacenamiento de su dirección de memoria
 	char *bccNombreSemaforo = generarEtiqueta(nombreBuffer, CONSUMIDOR_BC_SEMAF_ETIQ);
 	consumidor.bccSemaf = abrirSemaforo(bccNombreSemaforo);
-	// Decrementing global consumidor bufer semaphore
+	// Disminución del semáforo del búfer global del consumidor
 	sem_wait(consumidor.bccSemaf);
-	// Incrementing total consumers valor
+	// Incrementa el contador de consumidores
 	consumidor.bcc->totalConsumidores++;
 	consumidor.bcc->consumidoresAcumulados++;
-	// Incrementing global consumidor bufer semaphore
+	// Incrementa el contador del semáforo
 	sem_post(consumidor.bccSemaf);
-	// Storing shared messages buffer tamanio for writing index computing
+	// Almacenamiento del tamaño del búfer de mensajes compartidos para escribir el cálculo de índices
 	tamanioBloqueBuzon = obtenerTamanoBloque(nombreBuffer);
-	// Setting some timing and counting statatistic values to 0
+	// Estadísticas y tiempos inicializados
 	consumidor.mensajesConsumidos = 0;
 	consumidor.tiempoEsperado = 0;
 	consumidor.tiempoBloqueado = 0;
-	// Getting process statistic struct
+	// Estadísticas de los procesos
 	getrusage(RUSAGE_SELF, &utime);
-	// Setting free used string allocated memory 
+	// Liberación de nombers de semáforos, productores y consumidores
 	free(consumidores_semaf_nombre);
 	free(productores_semaf_nombre);
 	free(bccNombre);
@@ -160,7 +156,7 @@ void iniciarConsumidor(char *nombreBuffer, int random_times_mean, int operation_
 
 void leerMsg(int index){
 	struct Mensaje *msg = consumidor.buffer + index;
-	// System suspend indicator
+	// Indicador de suspensión del proceso
 	if (msg->numeroMagico == -1){
 		finalizarConsumidor();
 		consumidor.motivoSuspension = "Finalizado por el finalizador (valga la redundancia...).";
@@ -173,7 +169,7 @@ void leerMsg(int index){
 	}
 	consumidor.mensajesConsumidos++;
 	sem_post(consumidor.bufferSemafProductor);
-
+	// Imprime estadísticas
 	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
 	printf("\033[1;35m| Un mensaje fue leído en la memoria compartida \033[1;35m|\n");
 	printf("\033[1;33m|----------------------------------------------\033[1;33m|\n");
@@ -182,10 +178,10 @@ void leerMsg(int index){
 	printf("\033[0;34m|Productores activos  %-10i                 \033[1;34m|\n", consumidor.bcp->totalProductores);
 	printf("|--------------------------------------------|\n");
 	imprimirMsg(msg);
-	printf("----------------------------------------------\033[0m\n");
-	
+	printf("|--------------------------------------------|\033[0m\n");
 }
 
+// Imprime el mensaje consumido
 void imprimirMsg(struct Mensaje *msg){
 	printf("\033[0;35m|PID Productor    %-10i                 \033[1;35m|\n", msg->id);
 	printf("\033[0;33m|Día              %-10i                 \033[1;33m|\n", msg->fecha.dia);
@@ -197,6 +193,7 @@ void imprimirMsg(struct Mensaje *msg){
 	printf("\033[0;33m|Número Mágico    %-10i                 \033[1;33m|\n", msg->numeroMagico);
 }
 
+// Finaliza un consumidor
 void finalizarConsumidor(){
 	consumidor.user_stime = (long int) utime.ru_utime.tv_usec;
 	sem_wait(consumidor.bccSemaf);
@@ -208,6 +205,7 @@ void finalizarConsumidor(){
 	kill = TRUE;
 }
 
+// Distribución de Poisson
 double poisson(double lambda){
 	r = rand() / (RAND_MAX + 1.0);
 	return log(log(r / lambda));

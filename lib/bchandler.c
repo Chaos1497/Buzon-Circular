@@ -1,8 +1,3 @@
-/*  
-*   Programar en C: Memoria Compartida POSIX. (Shared Memory). Linux
-*   This code is a modification obtained at the website https://github.com/WhileTrueThenDream/ExamplesCLinuxUserSpace
-*   Creator: WhileTrueThenDream, Mar 4th, 2020.
-*/
 #include "bchandler.h"
 #define ERROR -1
 
